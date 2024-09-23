@@ -45,7 +45,7 @@ sudo nano /etc/network/interfaces
 ```
 auto eth0
 iface eth0 inet static
-address 192.168.122.13
+address 192.168.122.12
 netmask 255.255.255.0
 gateway 192.168.122.1
 ```
@@ -76,7 +76,7 @@ sudo nano /etc/network/interfaces
 ```
 auto eth0
 iface eth0 inet static
-address 192.168.122.12
+address 192.168.122.13
 netmask 255.255.255.0
 gateway 192.168.122.1
 ```
@@ -194,11 +194,11 @@ sudo ssh-copy-id adminstd@192.168.122.12
 ### 3.2. На клиенте настройте аутентификацию по ключам с сервером.
 ```bash
 ssh key-gen
-ssh-copy-id adminstd@192.168.122.13 # time out
+ssh-copy-id adminstd@192.168.122.13
 ```
 ### 3.3. Подключитесь к серверу с машины клиента и создайте в директории /home/study файл с содержимым «Hello world!».
 ```bash
-echo "Hello, world!" ? /home/study/hello.txt
+echo "Hello, world!" > /home/study/hello.txt
 ```
 ### 3.4. Скопируйте с сервера на клиент (командой scp) файл, созданный в предыдущем пункте.
 ```bash
