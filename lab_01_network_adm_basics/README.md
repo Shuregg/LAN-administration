@@ -1,10 +1,10 @@
-## Задание 1
-### 1.1. Проанализируйте файл /etc/network/interfaces. Что означает каждая строка?
+## 1. Initial machine configuration
+### 1.1 Interfaces configuration
 ```bash
 cat /etc/network/interfaces
 ```
-### 1.2. Выясните текущие сетевые настройки каждой машины. Проверьте соединение между клиентом и сервером.
-Для клиента:
+### 1.2. Net settings
+For Client:
 ```bash
 cat /etc/hostname
 # > iavclient
@@ -17,7 +17,7 @@ ping iavserver
 # 64 buytes from iavserver (192.168.122.230): icmp_seq=1 ttl=64 time=4.33 ms
 # ...
 ```
-Для сервера:
+For Server:
 ```bash
 cat /etc/hostname
 # > iavserver
@@ -30,7 +30,7 @@ ping iavclient
 # 64 buytes from iavclient (192.168.122.235): icmp_seq=1 ttl=64 time=3.97 ms
 # ...
 ```
-### 1.3. Используя параметры, приведённые в таблице ниже, настройте сеть, дополнив необходимые конфигурационные файлы.
+### 1.3. Net configuration.
 |Machine name | Server | Client |
 |---|---|---|
 |Host name| iavserver| iavclient |
@@ -38,7 +38,7 @@ ping iavclient
 |Default gateway |192.168.122.1 | 192.168.122.1 |
 
 
-Конфигурация eth0 для клиента
+Client's eth0 interface configuration
 ```bash
 sudo nano /etc/network/interfaces
 ```
@@ -50,7 +50,7 @@ netmask 255.255.255.0
 gateway 192.168.122.1
 ```
 
-Добавление домена сервера
+Adding server's domen
 ```bash
 sudo nano /etc/hosts
 ```
@@ -69,7 +69,7 @@ ping iavserver
 ```
 
 
-Конфигурация eth0 для сервера
+Server's eth0 interface configuration
 ```bash
 sudo nano /etc/network/interfaces
 ```
@@ -81,7 +81,7 @@ netmask 255.255.255.0
 gateway 192.168.122.1
 ```
 
-Добавление домена клиента
+Adding client's domen
 ```bash
 sudo nano /etc/hosts
 ```
@@ -98,9 +98,9 @@ ping iavclient
 # 64 buytes from iavclient (192.168.122.12): icmp_seq=1 ttl=64 time=1.07 ms
 ```
 
-## Задание 2
-### 2.1. На сервере создайте локальный FTP-репозиторий и загрузите на него файл, содержащий в названии ваши ФИО.
-Настройка серверной стороны:
+## 2. Shared space (FTP & Samba)
+### 2.1. Create local FTP repo on Server and upload a file.
+Server's side config:
 ```bash
 # install ftp daemon
 sudo apt install svftpd
@@ -129,23 +129,19 @@ sudo systemctl restart vsftpd
 ```
 ```bash
 echo "test file" > ~/ftp/iav.txt
-sudo chown ftp:ftp /home/ftp/iav.txt
+sudo sudo usermod -d /home/adminstd/ftp/iav.txt
 ```
 
-### 2.2. Выгрузите файл из созданного репозитория на машину Client.
+### 2.2. Download file from Server's FTP repo to Client.
 ```bash
-sftp adminstd@iavserver # time out
+wget ftp://ftp@192.168.122.13/iav.txt
 ```
-```
-> get ftp/iav.txt
-```
-### 2.3. Создайте на сервере общую папку smb и примонтируйте её на машине клиента в директорию с вашим именем.
+### 2.3. Create.
 Server:
 ```bash
 sudo apt install samba
 sudo mkdir /srv/share
-sudo chown nobody:nogroup /srv/share
-sudo chown 0777 /srv/share
+sudo chown 777 /srv/share
 sudo nano /etc/samba/smb.conf
 sudo systemctl restart smbd
 ```
@@ -163,11 +159,15 @@ sudo systemctl restart smbd
 Client:
 ```bash
 sudo apt install cifs-utils
-sudo mount -t cifs //192.168.122.13/share /mnt -o users,sec=none
+sudo mkdir ~/mnt
+sudo mount -t cifs //192.168.122.13/share /home/adminstd/mnt -o users,sec=none
+ls ~/mnt
+# > iav.txt
 ```
 
-### 2.4. На Client, используя графический интерфейс, поменяйте дату и время на 01.01.1970 и 18:12. Синхронизируйте время Server и Client по сети, установив NTP-сервер на машину Server.
+### 2.4. Change date and time on client to 01.01.1970 18:12. Sync date and time with Server's date and time using NTP-server.
 ```bash
+# Client's machine
 sudo apt install ntp
 sudo cp /etc/ntp.conf /etc/ntp.conf.orig
 sudo rm /etc/ntp.conf
@@ -181,26 +181,24 @@ sudo systemctl restart ntp
 sudo systemctl status ntp
 ```
 
-## Задание 3.
-### 3.1. На сервере запустите службу ssh и добавьте её в автозагрузку.
+## 3. SSH
+### 3.1. Run and add to autorun ssh daemon on Server.
 ```bash
-sudo apt install sshd
+sudo apt install ssh
 sudo systemctl start sshd
 sudo systemctl enable sshd
 sudo systemctl status sshd
-ssh-keygen
-sudo ssh-copy-id adminstd@192.168.122.12
 ```
-### 3.2. На клиенте настройте аутентификацию по ключам с сервером.
+### 3.2. Set authentication to Server via keys.
 ```bash
 ssh key-gen
 ssh-copy-id adminstd@192.168.122.13
 ```
-### 3.3. Подключитесь к серверу с машины клиента и создайте в директории /home/study файл с содержимым «Hello world!».
+### 3.3. Connect to Server and make a dir.
 ```bash
 echo "Hello, world!" > /home/study/hello.txt
 ```
-### 3.4. Скопируйте с сервера на клиент (командой scp) файл, созданный в предыдущем пункте.
+### 3.4. Copy a file from Server to Client this `hello.txt` file.
 ```bash
 # scp user@server_ip:path local_path
 scp adminstd@192.168.13:/home/study/hello.txt /hello_received.txt
