@@ -8,8 +8,7 @@
 install BIND9 on both the server and client machines:
 
 ```bash
-sudo apt update
-sudo apt install bind9 bind9utils bind9-doc -y
+sudo apt install bind9
 ```
 
 ### Step 2: Configuring BIND9 on the server
