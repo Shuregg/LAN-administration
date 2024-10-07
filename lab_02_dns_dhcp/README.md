@@ -175,3 +175,81 @@ Now you can send DNS queries by domain names, for example:
 ping srv.iav.miet.stu
 ping cli.iav.miet.stu
 ```
+
+## DHCP
+
+### Step 1:  Install the DHCP server on the server machine
+
+install fly-admin-dhcp on the server machine (for Astra Linux OS):
+
+```bash
+sudo apt-get install fly-admin-dhcp
+```
+
+### Step 2: Select the range 192.168.122.(N) - 192.168.122.(N+20) to allocate dynamic addresses
+
+```bash
+sudo nano /etc/dhcp/dhcpd.conf
+```
+
+```plaintext
+option domain-name "iav.miet.stu";
+option domain-name-servers 192.168.122.13;
+
+subnet 192.168.122.0 netmask 255.255.255.0 {
+   range 192.168.122.91 192.168.122.111;
+}
+```
+
+### Step 3: Start the DHCP service and make sure it is working correctly
+
+```bash
+sudo systemctl restart isc-dhcp-server
+sudo systemctl status isc-dhcp-server
+```
+
+On the client machine:
+
+```bash
+ifconfig
+```
+
+The dhcp server allocated the first available address to the client, i.e. 192.168.122.91ю
+
+### Step 4: Configure DHCP with a static address for client
+
+For example: 192.168.122.20
+
+First, you need to find out the client's MAC address:
+
+```bash
+ip a
+```
+
+Then we configure dhcp on the server:
+
+```bash
+sudo nano /etc/dhcp/dhcpd.conf
+
+```
+
+```plaintext
+host static_client {
+   hardware ethernet XX:XX:XX:XX:XX:XX;
+   fixed-address 192.168.122.20;
+}
+```
+
+Restart DHCP service
+
+```bash
+sudo systemctl restart isc-dhcp-server
+```
+
+On the client machine:
+
+```bash
+ifconfig
+```
+
+The dhcp server allocated a fixed address to the client, i.e. 192.168.122.20
