@@ -68,9 +68,9 @@ sudo named-checkconf
    ```plaintext
    $TTL    604800
    iav.miet.stu.        IN       SOA     srv.iav.miet.stu. admin.iav.miet.stu. (
-                             2024100601   ; Serial
-                             3h           ; Refresh
-                             1h           ; Retry
+                             2024100601   ; Serial number
+                             3h           ; Reresh rate
+                             1h           ; Retry of refresh 
                              1w           ; Expire
                              1h           ; Negative Cache TTL
    )           
@@ -89,18 +89,18 @@ sudo named-checkconf
    Fill the file with the following content:
 
    ```plaintext
-   $TTL    604800
-   iav.miet.stu.        IN       SOA     srv.iav.miet.stu. admin.iav.miet.stu. (
-                             2024100601   ; Serial
-                             3h           ; Refresh
-                             1h           ; Retry
-                             1w           ; Expire
-                             1h           ; Negative Cache TTL
+   TTL 604800
+   122.168.192.in-addr.arpa.       IN      SOA srv.iav.miet.stu. admin.iav.miet.stu. (
+           2024100601 ;
+           3h ;
+           1h ;
+           1w ;
+           1h ;
    )
-   iav.miet.stu.        IN       NS      srv.iav.miet.stu.
-   13                   IN       PTR     srv.iav.miet.stu.
-   12                   IN       PTR     cli.iav.miet.stu.
-   14                   IN       PTR     cli2.iav.miet.stu.
+   122.168.192.in-addr.arpa.       IN      NS  srv.iav.miet.stu.
+   12                              IN      PTR cli.iav.miet.stu.
+   13                              IN      PTR srv.iav.miet.stu.
+   14                              IN      PTR cli2.iav.miet.stu.
    ```
 
 #### 5. Checking the zone files
@@ -113,6 +113,14 @@ sudo named-checkzone 122.168.192.in-addr.arpa /etc/bind/zones/db.192.168.122
 ```
 
 #### 6. Restarting BIND9 and testing
+
+```bash
+sudo nano /etc/resolv.conf
+```
+
+```plaintext
+nameserver 192.168.122.13
+```
 
 Restart the service:
 
@@ -127,11 +135,11 @@ ping srv.iav.miet.stu
 ```
 
 ```plaintext
-PING srv.iav.miet.stu (192.168.122.13) 56(84) bytes of data
-64 bytes from 192.168.122.13 (192.168.122.13): icmp_seq=1 ttl=64 time=0.017 ms
-64 bytes from 192.168.122.13 (192.168.122.13): icmp_seq=2 ttl=64 time=0.032 ms
-64 bytes from 192.168.122.13 (192.168.122.13): icmp_seq=3 ttl=64 time=0.072 ms
-64 bytes from 192.168.122.13 (192.168.122.13): icmp_seq=4 ttl=64 time=0.067 ms
+PING srv.iav.miet.stu (192.168.122.13) 56(84) bytes of data.
+64 bytes from srv.iav.miet.stu (192.168.122.13): icmp_seq=1 ttl=64 time=0.022 ms
+64 bytes from srv.iav.miet.stu (192.168.122.13): icmp_seq=2 ttl=64 time=0.086 ms
+64 bytes from srv.iav.miet.stu (192.168.122.13): icmp_seq=3 ttl=64 time=0.069 ms
+64 bytes from srv.iav.miet.stu (192.168.122.13): icmp_seq=4 ttl=64 time=0.082 ms
 ```
 
 ```bash
@@ -139,11 +147,11 @@ ping cli.iav.miet.stu
 ```
 
 ```plaintext
-PING cli.iav.miet.stu (192.168.122.12) 56(84) bytes of data
-64 bytes from 192.168.122.12 (192.168.122.12): icmp_seq=1 ttl=64 time=0.054 ms
-64 bytes from 192.168.122.12 (192.168.122.12): icmp_seq=2 ttl=64 time=0.037 ms
-64 bytes from 192.168.122.12 (192.168.122.12): icmp_seq=3 ttl=64 time=0.064 ms
-64 bytes from 192.168.122.12 (192.168.122.12): icmp_seq=4 ttl=64 time=0.082 ms
+PING cli.iav.miet.stu (192.168.122.12) 56(84) bytes of data.
+64 bytes from cli.iav.miet.stu (192.168.122.12): icmp_seq=1 ttl=64 time=0.896 ms
+64 bytes from cli.iav.miet.stu (192.168.122.12): icmp_seq=2 ttl=64 time=1.11 ms
+64 bytes from cli.iav.miet.stu (192.168.122.12): icmp_seq=3 ttl=64 time=1.03 ms
+64 bytes from cli.iav.miet.stu (192.168.122.12): icmp_seq=4 ttl=64 time=1.73 ms
 ```
 
 ```bash
@@ -152,6 +160,14 @@ ping cli2.iav.miet.stu
 
 ```plaintext
 ping: cli2.iav.miet.stu: Unknown name or service
+```
+or
+
+```plaintext
+PING cli2.iav.miet.stu (192.168.122.14) 56(84) bytes of data.
+From srv.iav.miet.stu (192.168.122.13) icmp_seq=1 Destination Host Unreachable
+From srv.iav.miet.stu (192.168.122.13) icmp_seq=2 Destination Host Unreachable
+From srv.iav.miet.stu (192.168.122.13) icmp_seq=3 Destination Host Unreachable
 ```
 
 ### Step 3: Configuring the client to send DNS queries by domain names
@@ -188,13 +204,23 @@ sudo apt-get install fly-admin-dhcp
 
 ### Step 2: Select the range 192.168.122.(N) - 192.168.122.(N+20) to allocate dynamic addresses
 
+Set dhcp interface
+```bash
+sudo nano /etc/default/isc-dhcp-server
+```
+
+```plaintext
+INTERFACESv4="eth0"
+INTERFACESv6=""
+```
+ 
 ```bash
 sudo nano /etc/dhcp/dhcpd.conf
 ```
 
 ```plaintext
-option domain-name "iav.miet.stu";
-option domain-name-servers 192.168.122.13;
+option domain-name "iavdhcp";
+option domain-name-servers iavdhcp;
 
 subnet 192.168.122.0 netmask 255.255.255.0 {
    range 192.168.122.91 192.168.122.111;
@@ -208,13 +234,51 @@ sudo systemctl restart isc-dhcp-server
 sudo systemctl status isc-dhcp-server
 ```
 
-On the client machine:
+Attention! The eth0 of Server machine should be static like this:
 
-```bash
-ifconfig
+```plaintext
+auto eth0
+iface eth0 inet static
+address 192.168.122.13
+netmask 255.255.255.0
+gateway 192.168.122.1
 ```
 
-The dhcp server allocated the first available address to the client, i.e. 192.168.122.91ю
+but, of course, the client's interface should be controled by dhcp:
+
+```plaintext
+auto eth0
+iface eth0 inet dhcp
+```
+
+On the client machine:
+1. Reset dynamic address
+2. Get new address
+3. Check it
+
+```bash
+sudo dhclient -r
+sudo dhclient
+sudo ifconfig
+```
+
+```plaintext
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.122.91  netmask 255.255.255.0  broadcast 192.168.122.255
+```
+The dhcp server allocated the first available address to the client (192.168.122.91).
+
+Check resolv.conf:
+
+```bash
+sudo nano /etc/resolv.conf
+```
+
+```plaintext
+domain iavdhcp
+search iavdhcp
+nameserver 192.168.122.13
+```
 
 ### Step 4: Configure DHCP with a static address for client
 
@@ -234,11 +298,17 @@ sudo nano /etc/dhcp/dhcpd.conf
 ```
 
 ```plaintext
+subnet 192.168.122.0 netmask 255.255.255.0 {
+   range 192.168.122.91 192.168.122.111;
+}
+
 host static_client {
-   hardware ethernet XX:XX:XX:XX:XX:XX;
+   hardware ethernet 08:00:27:d1:2e:7a;
    fixed-address 192.168.122.20;
 }
 ```
+
+where is 08:00:27:d1:2e:7a - MAC address
 
 Restart DHCP service
 
@@ -249,7 +319,12 @@ sudo systemctl restart isc-dhcp-server
 On the client machine:
 
 ```bash
-ifconfig
+sudo ifconfig
 ```
 
-The dhcp server allocated a fixed address to the client, i.e. 192.168.122.20
+```plaintext
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.122.20  netmask 255.255.255.0  broadcast 192.168.122.255
+```
+
+The dhcp server allocated a fixed address to the client (192.168.122.20).
