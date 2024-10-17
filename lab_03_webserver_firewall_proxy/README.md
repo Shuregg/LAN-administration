@@ -307,4 +307,57 @@ sudo apt install squid
 
 2. Configure the proxy server so that access to the `vk.com` is restricted during business hours, and the rest of the sites were launched freely.
 
+    Make config backup:
+    
+    ```bash
+    sudo cp /etc/squid/squid.conf /etc/squid/squid.conf.orig
+    ```
+
+    Replace orig file by file without comments (maybe useful):
+
+    ```bash
+    sudo grep -v '^ *#\|^ *$' /etc/squid/squid.conf > ~/squid.conf;
+    sudo cp ~/squid.conf /etc/squid/squid.conf;
+    ```
+
+    Overwrite the config
+    ```bash
+    sudo nano /etc/squid/squid.conf
+    ```
+
+    Insert the next parameters:
+    ```plaintext
+    # ACL for ports and local networks
+    acl eth port 80
+    acl localnet src 192.168.122.0/24
+
+    # ACL for domains
+    acl local_domain        dstdomain       .iav.miet.stu
+    acl vk_domain           dstdomain       .vk.com
+    acl ya_domain           dstdomain       .ya.ru
+
+    # ACL for worktime
+    acl work_time time MTWHF 09:00-17:00  # Пн-Пт с 09:00 до 17:00
+
+    # Access rules
+    http_access allow localnet
+    http_access allow local_domain
+
+    http_access deny vk_domain work_time
+
+    http_access allow all
+    http_access deny all
+    ```
+    
+    Check syntax:
+
+    ```bash
+    squid -k check
+    ```
+
+    If all is correct, restart Squid:
+
+    ```bash
+    sudo squid -k reconfigure; # or use sudo systemctl restart squid
+    ```
 3. Make sure that the client has access to the site you created. Prohibit the client from connecting to the site using a proxy server.  
