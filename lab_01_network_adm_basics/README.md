@@ -103,7 +103,7 @@ ping iavclient
 Server's side config:
 ```bash
 # install ftp daemon
-sudo apt install svftpd
+sudo apt install vsftpd
 ```
 
 ```bash
@@ -129,7 +129,7 @@ sudo systemctl restart vsftpd
 ```
 ```bash
 echo "test file" > ~/ftp/iav.txt
-sudo sudo usermod -d /home/adminstd/ftp/iav.txt
+sudo usermod -d /home/astra/ftp/ ftp
 ```
 
 ### 2.2. Download file from Server's FTP repo to Client.
