@@ -1,4 +1,4 @@
-# Web-server: nginx
+# Web server, Firewall, Proxy server
 
 ## Prerequirement
 
