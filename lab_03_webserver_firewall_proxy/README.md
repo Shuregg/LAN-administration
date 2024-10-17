@@ -166,16 +166,141 @@ sudo apt install squid
 
 1. Turn on integrated firewall on the server and reset the current state.
 
+    ```bash
+    sudo ufw reset
+    ```
+    
+    ```plaintext
+    Resetting all rules to installed defaults. Proceed with operation (y|n)? 
+    ```
+    
+    ```bash
+    y
+    ```
+    
+    ```plaintext
+    Backing up 'user.rules' to '/etc/ufw/user.rules.20241017_181741'
+    Backing up 'before.rules' to '/etc/ufw/before.rules.20241017_181741'
+    Backing up 'after.rules' to '/etc/ufw/after.rules.20241017_181741'
+    Backing up 'user6.rules' to '/etc/ufw/user6.rules.20241017_181741'
+    Backing up 'before6.rules' to '/etc/ufw/before6.rules.20241017_181741'
+    Backing up 'after6.rules' to '/etc/ufw/after6.rules.20241017_181741'
+    ```
+    
+    ```bash
+    sudo ufw enable
+    sudo ufw status verbose
+    ```
+
 2. Add a rule, that prohibiting connection to the server via the `sftp` procotol (`port 22`).
 
+    On the server:
+
+    Block port `22/tcp` (`ssh` and `sftp` use `TCP` protocol).
+    
+    ```bash
+    sudo ufw deny 22/tcp
+    ```
+
+    On the client:
+
+    Try to get a file from the server:
+    ```bash
+    wget ftp://ftp@192.168.122.13/iav.txt
+    ```
+
+    Infinite connection
+    ```plaintext
+    --2024-10-17 19:01:27--  ftp://ftp@192.168.122.13/iav.txt
+               => «iav.txt»
+    Connecting to 192.168.122.13:21...
+    ```
 3. Add a rule allowing all incoming packets from the client.
+    
+    Server:
+
+    ```bash
+    sudo ufw allow from 192.168.122.20
+    ```
+    
+    Client:
+    
+    ```bash
+    wget ftp://ftp@192.168.122.13/iav.txt
+    ```
+    
+    Now you can get a file from server via ftp
+    ```plaintext
+    --2024-10-17 19:04:44--  ftp://ftp@192.168.122.13/iav.txt
+               => «iav.txt»
+    Connecting to 192.168.122.13: 21... the connection is established.
+    The login is performed under the ftp name... You are logged in!
+    ==> SYST ... done.  ==> PWD ... done.
+    ==> TYPE I ... done.   ==> CWD is not required.
+    ==> SIZE iav.txt ... 10
+    ==> PASV ... done.  ==> RETR iav.txt ... done.
+    Size (bytes): 10 (not enough)
+    
+    iav.txt            100%[=============>]      10 --.-KB/s for 0s      
+    
+    2024-10-17 19:04:44 (264 KB/s) - "iav.txt " saved [10]
+    ```
 
 4. Check the connetction to the server via `sftp` and `ftp` protocols.
 
+    Trying ftp:
+    
+    ```bash
+    ftp server
+    ```
+
+    Connected!
+
+    ```plaintext
+    Connected to 192.168.122.13.
+    220 (vsFTPd 3.0.5)
+    Name (192.168.122.13:astra): exit
+    ```
+
+    Trying sftp:
+
+    ```bash
+    sftp server
+    ```
+
+    Infinite connection (cause port 22 is blocked).
+
 5. Delete rule that prohibiting connection via the sftp (without reset). Check the connection.
 
-6. Turn of the firewall.
+    Deleting rule:
 
+    ```bash
+    sudo ufw delete deny 22/tcp
+    ```
+
+    Trying sftp:
+
+    ```bash
+    sftp server
+    ```
+
+    Connected to the server via sftp:
+
+    ```plaintext
+    The authenticity of host 'server (192.168.122.13)' can't be established.
+    ECDSA key fingerprint is SHA256:---------------------------------------
+    Are you sure you want to continue connecting (yes/no)? yes
+    Warning: Permanently added 'server,192.168.122.13' (ECDSA) to the list of known hosts.
+    ```
+
+6. Turn of the firewall.
+    ```bash
+    sudo ufw disable 
+    ```
+
+    ```plaintext
+    Firewall stopped and disabled on system startup
+    ```
 ## 4. Squid proxy server
 
 1. Install the squid on the server.
