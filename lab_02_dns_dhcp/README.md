@@ -119,7 +119,9 @@ sudo nano /etc/resolv.conf
 ```
 
 ```plaintext
+domain iav.miet.stu
 nameserver 192.168.122.13
+nameserver 10.0.2.3
 ```
 
 Restart the service:
