@@ -55,7 +55,7 @@ sudo apt install squid
     sudo nano /etc/nginx/nginx.conf
     ```
 
-    ```plaintext
+    ```bash
     user www-data;
     worker_processes auto;
     pid /run/nginx.pid;
@@ -91,7 +91,7 @@ sudo apt install squid
     ```
 
     You will see the following if there are no errors:
-    ```plaintext
+    ```bash
     nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
     nginx: configuration file /etc/nginx/nginx.conf test is successful
     ```
@@ -110,7 +110,7 @@ sudo apt install squid
 
     Insert `site IN A 192.168.122.13` to the config:
     
-    ```plaintext
+    ```bash
     $TTL    604800
     iav.miet.stu.        IN       SOA     srv.iav.miet.stu. admin.iav.miet.stu (
         2024100601
@@ -170,7 +170,7 @@ sudo apt install squid
     sudo ufw reset
     ```
     
-    ```plaintext
+    ```bash
     Resetting all rules to installed defaults. Proceed with operation (y|n)? 
     ```
     
@@ -178,7 +178,7 @@ sudo apt install squid
     y
     ```
     
-    ```plaintext
+    ```bash
     Backing up 'user.rules' to '/etc/ufw/user.rules.20241017_181741'
     Backing up 'before.rules' to '/etc/ufw/before.rules.20241017_181741'
     Backing up 'after.rules' to '/etc/ufw/after.rules.20241017_181741'
@@ -210,7 +210,7 @@ sudo apt install squid
     ```
 
     Infinite connection
-    ```plaintext
+    ```bash
     --2024-10-17 19:01:27--  ftp://ftp@192.168.122.13/iav.txt
                => «iav.txt»
     Connecting to 192.168.122.13:21...
@@ -230,7 +230,7 @@ sudo apt install squid
     ```
     
     Now you can get a file from server via ftp
-    ```plaintext
+    ```bash
     --2024-10-17 19:04:44--  ftp://ftp@192.168.122.13/iav.txt
                => «iav.txt»
     Connecting to 192.168.122.13: 21... the connection is established.
@@ -256,7 +256,7 @@ sudo apt install squid
 
     Connected!
 
-    ```plaintext
+    ```bash
     Connected to 192.168.122.13.
     220 (vsFTPd 3.0.5)
     Name (192.168.122.13:astra): exit
@@ -286,7 +286,7 @@ sudo apt install squid
 
     Connected to the server via sftp:
 
-    ```plaintext
+    ```bash
     The authenticity of host 'server (192.168.122.13)' can't be established.
     ECDSA key fingerprint is SHA256:---------------------------------------
     Are you sure you want to continue connecting (yes/no)? yes
@@ -298,7 +298,7 @@ sudo apt install squid
     sudo ufw disable 
     ```
 
-    ```plaintext
+    ```bash
     Firewall stopped and disabled on system startup
     ```
 ## 4. Squid proxy server
@@ -325,28 +325,61 @@ sudo apt install squid
     sudo nano /etc/squid/squid.conf
     ```
 
-    Insert the next parameters:
-    ```plaintext
-    # ACL for ports and local networks
-    acl eth port 80
-    acl localnet src 192.168.122.0/24
+    Insert the next parameters (modified default config):
+    ```bash
+    acl localnet src 0.0.0.1-0.255.255.255 # RFC 1122 "this" network (LAN)
+    acl localnet src 10.0.0.0/8  # RFC 1918 local private network (LAN)
+    acl localnet src 100.64.0.0/10  # RFC 6598 shared address space (CGN)
+    acl localnet src 169.254.0.0/16  # RFC 3927 link-local (directly plugged) machines
+    acl localnet src 172.16.0.0/12  # RFC 1918 local private network (LAN)
+    acl localnet src 192.168.0.0/16  # RFC 1918 local private network (LAN)
+    acl localnet src fc00::/7        # RFC 4193 local private network range
+    acl localnet src fe80::/10       # RFC 4291 link-local (directly plugged) machines
 
-    # ACL for domains
-    acl local_domain        dstdomain       .iav.miet.stu
-    acl vk_domain           dstdomain       .vk.com
-    acl ya_domain           dstdomain       .ya.ru
+    acl SSL_ports port 443
 
-    # ACL for worktime
-    acl work_time time MTWHF 09:00-17:00  # Пн-Пт с 09:00 до 17:00
+    acl Safe_ports port 80  # http
+    acl Safe_ports port 21  # ftp
+    acl Safe_ports port 443  # https
+    acl Safe_ports port 70  # gopher
+    acl Safe_ports port 210  # wais
+    acl Safe_ports port 1025-65535 # unregistered ports
+    acl Safe_ports port 280  # http-mgmt
+    acl Safe_ports port 488  # gss-http
+    acl Safe_ports port 591  # filemaker
+    acl Safe_ports port 777  # multiling http
 
-    # Access rules
+    # ====== ACL domains ======
+    acl vk-domain dstdomain .vk.com
+    acl block-site dstdomain "/etc/squid/block.txt"
+    
+    # ====== ACL time ======
+    acl worktime time MTWHF 09:00-18:00
+
+    # ====== ACL access rules ======
+    # Block vk.com in worktime
+    http_access deny vk-domain worktime
+
+    # Block domains from block.txt 
+    http_access deny block-site
+    http_access deny !Safe_ports
+    http_access deny CONNECT !SSL_ports
+    http_access allow localhost manager
+    http_access deny manager
+
+    include /etc/squid/conf.d/*.conf
+
+    http_access allow localhost
     http_access allow localnet
-    http_access allow local_domain
-
-    http_access deny vk_domain work_time
-
-    http_access allow all
     http_access deny all
+    http_port 3128
+
+    coredump_dir /var/spool/squid
+
+    refresh_pattern ^ftp:  1440 20% 10080
+    refresh_pattern ^gopher: 1440 0% 1440
+    refresh_pattern -i (/cgi-bin/|\?) 0 0% 0
+    refresh_pattern .  0 20% 4320
     ```
     
     Check syntax:
@@ -360,4 +393,11 @@ sudo apt install squid
     ```bash
     sudo squid -k reconfigure; # or use sudo systemctl restart squid
     ```
-3. Make sure that the client has access to the site you created. Prohibit the client from connecting to the site using a proxy server.  
+
+3. Make sure that the client has access to the site you created.
+    
+    Prohibit the client from connecting to the site using a proxy server.  
+    ```bash
+    firefox vk.com
+    ```
+    ![Check vk.com and other site from the client using proxy](images/img_04_check_proxy_from_client.png)
