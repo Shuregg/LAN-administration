@@ -65,7 +65,7 @@ sudo named-checkconf
 
    Fill the file with the following content:
 
-   ```plaintext
+   ```bash
    $TTL    604800
    iav.miet.stu.        IN       SOA     srv.iav.miet.stu. admin.iav.miet.stu. (
                              2024100601   ; Serial number
@@ -88,7 +88,7 @@ sudo named-checkconf
 
    Fill the file with the following content:
 
-   ```plaintext
+   ```bash
    TTL 604800
    122.168.192.in-addr.arpa.       IN      SOA srv.iav.miet.stu. admin.iav.miet.stu. (
            2024100601 ;
@@ -118,7 +118,7 @@ sudo named-checkzone 122.168.192.in-addr.arpa /etc/bind/zones/db.192.168.122
 sudo nano /etc/resolv.conf
 ```
 
-```plaintext
+```bash
 domain iav.miet.stu
 nameserver 192.168.122.13
 nameserver 10.0.2.3
@@ -136,7 +136,7 @@ Test the availability of the machines by pinging their names:
 ping srv.iav.miet.stu
 ```
 
-```plaintext
+```bash
 PING srv.iav.miet.stu (192.168.122.13) 56(84) bytes of data.
 64 bytes from srv.iav.miet.stu (192.168.122.13): icmp_seq=1 ttl=64 time=0.022 ms
 64 bytes from srv.iav.miet.stu (192.168.122.13): icmp_seq=2 ttl=64 time=0.086 ms
@@ -148,7 +148,7 @@ PING srv.iav.miet.stu (192.168.122.13) 56(84) bytes of data.
 ping cli.iav.miet.stu
 ```
 
-```plaintext
+```bash
 PING cli.iav.miet.stu (192.168.122.12) 56(84) bytes of data.
 64 bytes from cli.iav.miet.stu (192.168.122.12): icmp_seq=1 ttl=64 time=0.896 ms
 64 bytes from cli.iav.miet.stu (192.168.122.12): icmp_seq=2 ttl=64 time=1.11 ms
@@ -160,12 +160,13 @@ PING cli.iav.miet.stu (192.168.122.12) 56(84) bytes of data.
 ping cli2.iav.miet.stu
 ```
 
-```plaintext
+```bash
 ping: cli2.iav.miet.stu: Unknown name or service
 ```
+
 or
 
-```plaintext
+```bash
 PING cli2.iav.miet.stu (192.168.122.14) 56(84) bytes of data.
 From srv.iav.miet.stu (192.168.122.13) icmp_seq=1 Destination Host Unreachable
 From srv.iav.miet.stu (192.168.122.13) icmp_seq=2 Destination Host Unreachable
@@ -182,7 +183,7 @@ From srv.iav.miet.stu (192.168.122.13) icmp_seq=3 Destination Host Unreachable
 
 2. Add the DNS server:
 
-   ```plaintext
+   ```bash
    domain iav.miet.stu
    nameserver 192.168.122.13
    ```
@@ -207,20 +208,21 @@ sudo apt-get install fly-admin-dhcp
 ### Step 2: Select the range 192.168.122.(N) - 192.168.122.(N+20) to allocate dynamic addresses
 
 Set dhcp interface
+
 ```bash
 sudo nano /etc/default/isc-dhcp-server
 ```
 
-```plaintext
+```bash
 INTERFACESv4="eth0"
 INTERFACESv6=""
 ```
- 
+
 ```bash
 sudo nano /etc/dhcp/dhcpd.conf
 ```
 
-```plaintext
+```bash
 option domain-name "iavdhcp";
 option domain-name-servers iavdhcp;
 
@@ -238,7 +240,7 @@ sudo systemctl status isc-dhcp-server
 
 Attention! The eth0 of Server machine should be static like this:
 
-```plaintext
+```bash
 auto eth0
 iface eth0 inet static
 address 192.168.122.13
@@ -248,12 +250,13 @@ gateway 192.168.122.1
 
 but, of course, the client's interface should be controled by dhcp:
 
-```plaintext
+```bash
 auto eth0
 iface eth0 inet dhcp
 ```
 
 On the client machine:
+
 1. Reset dynamic address
 2. Get new address
 3. Check it
@@ -264,10 +267,11 @@ sudo dhclient
 sudo ifconfig
 ```
 
-```plaintext
+```bash
 eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
         inet 192.168.122.91  netmask 255.255.255.0  broadcast 192.168.122.255
 ```
+
 The dhcp server allocated the first available address to the client (192.168.122.91).
 
 Check resolv.conf:
@@ -276,7 +280,7 @@ Check resolv.conf:
 sudo nano /etc/resolv.conf
 ```
 
-```plaintext
+```bash
 domain iavdhcp
 search iavdhcp
 nameserver 192.168.122.13
@@ -299,7 +303,7 @@ sudo nano /etc/dhcp/dhcpd.conf
 
 ```
 
-```plaintext
+```bash
 subnet 192.168.122.0 netmask 255.255.255.0 {
    range 192.168.122.91 192.168.122.111;
 }
@@ -324,7 +328,7 @@ On the client machine:
 sudo ifconfig
 ```
 
-```plaintext
+```bash
 eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
         inet 192.168.122.20  netmask 255.255.255.0  broadcast 192.168.122.255
 ```
