@@ -173,7 +173,7 @@ Set up Dovecot
     Set parameters
 
     ```bash
-    mail_location = maildir:~/maildir
+    mail_location = maildir:~/Maildir
     ```
 
     Restart service
@@ -185,15 +185,21 @@ Set up Dovecot
 
 ### 2.3
 
-    generic
+* generic
 
     ```bash
-    mailserver@iav.miet.stu san4ows55@yandex.ru
+    mailserver@iav.miet.stu youryandexmail@yandex.ru
     ```
 
-    sasl_passwd
+* sasl_passwd
 
     ```bash
-    smtp.yandex.ru san4ows55@yandex.ru:ybxtdeasfdtmudnh
+    smtp.yandex.ru youryandexmail@yandex.ru:**********
     ```
-    
+
+* Indexing configs
+
+    ```bash
+    sudo postmap /etc/postfix/generic
+    sudo postmap /etc/postfix/sasl_passwd
+    ```
