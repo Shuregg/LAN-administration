@@ -70,10 +70,10 @@
     #myorigin = /etc/mailname
     
     #smtpd_banner = $myhostname ESMTP $mail_name (AstraLinux)
-    #biff = no
+    biff = no
     
     # appending .domain is the MUA's job.
-    #append_dot_mydomain = no
+    append_dot_mydomain = no
     
     # Uncomment the next line to generate "delayed mail" warnings
     #delay_warning_time = 4h
@@ -82,7 +82,7 @@
     
     # See http://www.postfix.org/COMPATIBILITY_README.html -- default to 2 on
     # fresh installs.
-    #compatibility_level = 2
+    compatibility_level = 2
     
     
     
@@ -92,6 +92,28 @@
     #smtpd_use_tls=yes
     #smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
     #smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
+    
+    # See /usr/share/doc/postfix/TLS_README.gz in the postfix-doc package for
+    # information on enabling SSL in the smtp client.
+    
+    #smtpd_relay_restrictions = permit_mynetworks permit_sasl_authenticated defer_unauth_destination
+    smtpd_relay_restrictions = permit_mynetworks permit_sasl_authenticated reject_unauth_destination
+    myhostname = srv.iav.miet.stu
+    
+    alias_maps = hash:/etc/aliases
+    alias_database = hash:/etc/aliases
+    myorigin = /etc/mailname
+    #mydestination = $myhostname, iav.miet.stu, server, localhost.localdomain, localhost
+    mydestination = $myhostname, iav.miet.stu, localhost.localdomain, localhost
+    home_mailbox = Maildir/
+    relayhost = smtp.yandex.ru:465 
+    #relayhost = smtp.yandex.ru:587 
+    mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128 192.168.122.0/24
+    #mynetworks = 192.168.122.0/24
+    mailbox_size_limit = 0
+    recipient_delimiter = +
+    inet_interfaces = all
+    inet_protocols = all
     
     smtp_use_tls = yes
     smtp_sasl_auth_enable = yes
@@ -104,28 +126,6 @@
     smtp_sasl_security_options = noanonymous
     smtp_tls_security_level = encrypt
     smtp_tls_loglevel = 1
-    
-    # See /usr/share/doc/postfix/TLS_README.gz in the postfix-doc package for
-    # information on enabling SSL in the smtp client.
-    
-    #smtpd_relay_restrictions = permit_mynetworks permit_sasl_authenticated defer_unauth_destination
-    smtpd_relay_restrictions = permit_mynetworks permit_sasl_authenticated reject_unauth_destination
-    #myhostname = server.iav.miet.stu
-    myhostname = srv.iav.miet.stu
-    #alias_maps = hash:/etc/aliases
-    #alias_database = hash:/etc/aliases
-    #myorigin = /etc/mailname
-    #mydestination = $myhostname, iav.miet.stu, server, localhost.localdomain, localhost
-    mydestination = $myhostname, iav.miet.stu, localhost.localdomain, localhost
-    relayhost = smtp.yandex.ru:465
-    home_mailbox = Maildir/
-    #mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128 192.168.122.0/24
-    mynetworks = 192.168.122.0/24
-    #mailbox_size_limit = 0
-    #recipient_delimiter = +
-    #inet_interfaces = all
-    #inet_protocols = all
-    #inet_protocols = ipv4
     ```
 
 * Restart service
@@ -183,7 +183,7 @@ Set up Dovecot
     sudo systemctl status dovecot
     ```
 
-### 2.3
+### 2.3 Postfix external access configuration
 
 * generic
 
