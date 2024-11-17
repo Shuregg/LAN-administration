@@ -1,0 +1,95 @@
+- name: Collect System Info Playbook
+  hosts:
+    - srv.iav.miet.stu
+    - cli1.iav.miet.stu
+  become: no
+  vars:
+    initials: "iav"
+    server_host: "srv.iav.miet.stu"
+    client_host: "cli1.iav.miet.stu"
+    log_fname: "info.log"
+    server_dir_name: "Server{{ initials }}"
+    client_dir_name: "Client{{ initials }}"
+    server_dir_path: "{{ ansible_env.HOME }}/{{server_dir_name}}"
+    client_dir_path: "{{ ansible_env.HOME }}/{{client_dir_name}}"
+    server_log_file_path: "{{ server_dir_path }}/{{ log_fname }}"
+    client_log_file_path: "{{ client_dir_path }}/{{ log_fname }}"
+    temp_fname: "temp.log"
+    temp_fpath: "{{ ansible_env.HOME }}/{{temp_fname}}"
+  gather_facts: true
+  tasks:
+    - name: Create dir on server
+      file:
+        path: "{{ server_dir_path }}"
+        state: directory
+      when: inventory_hostname == server_host
+
+    - name: Create dir on client
+      file:
+        path: "{{ client_dir_path }}"
+        state: directory
+      when: inventory_hostname == client_host
+
+    - name: Checking if the file exists on server
+      stat:
+        path: "{{ server_log_file_path }}"
+      when: inventory_hostname == server_host
+      register: srv_file_check
+
+    - name: Checking if the file exists on client
+      stat:
+        path: "{{ client_log_file_path }}"
+      when: inventory_hostname == client_host
+      register: cli_file_check
+
+    - name: Create system info file on server
+      file:
+        path: "{{ server_log_file_path }}"
+        state: touch
+      when: inventory_hostname == server_host and srv_file_check.stat.exists == false
+
+    - name: Create system info file on client
+      file:
+        path: "{{ client_log_file_path }}"
+        state: touch
+      when: inventory_hostname == client_host and cli_file_check.stat.exists == false
+    #=========================================================================================
+    - name: Get IP address
+      ansible.builtin.command: hostname -I
+      register: ip_address
+      changed_when: false
+
+    - name: Get memory usage in MB
+      ansible.builtin.shell: "free -m | awk '/Mem:/ {print $3}'"
+      register: memory_usage
+      changed_when: false
+
+    - name: Get average load in last 15 minutes
+      ansible.builtin.shell: "awk '{print $3}' /proc/loadavg"
+      register: load_average
+      changed_when: false
+
+    - name: Write metrics to temporary file
+      ansible.builtin.lineinfile:
+        path: "{{ ansible_env.HOME }}/{{temp_fname}}"
+        create: true
+        line: "{{ ansible_hostname }} | Bebopovsky | {{ ip_address.stdout.strip() }} | {{ memory_usage.stdout.strip() }} | {{ load_average.stdout.strip() }}"
+      become: false
+
+    - name: Debug
+      ansible.builtin.debug:
+        msg: "Target directory: {{ client_dir_path }}' if inventory_hostname == '{{ client_host }}' else '{{ server_dir_name }}' }}"
+
+    - name: Move file to directories
+      ansible.builtin.command: >
+        mv "{{ ansible_env.HOME }}/{{ temp_fname }}" "{{ server_log_file_path if inventory_hostname == server_host else client_log_file_path }}"
+      become: false
+
+    - name: Delete temporary file
+      ansible.builtin.file:
+        path: "{{ ansible_env.HOME }}/{{temp_fname}}"
+        state: absent
+
+    - name: Check average load and display status message
+      ansible.builtin.debug:
+        msg: "state {{ ansible_hostname }} {{ 'High load in last 15 min' if load_average.stdout | float > 1 else 'Low load in last 15 min' }}"

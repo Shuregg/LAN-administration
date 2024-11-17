@@ -1,0 +1,11 @@
+- name: freeRAM
+  hosts: all
+  become: false
+  tasks:
+    - name: findRAM
+      ansible.builtin.shell:
+        cmd: cat /proc/meminfo | grep "MemFree:"
+      register: meminfo_out
+    - name: showRAM
+      debug:
+        msg: "Free RAM: {{meminfo_out.stdout}}"
