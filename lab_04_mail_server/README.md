@@ -3,7 +3,7 @@
 ## 0. Prerequirements
 
 * Mail server *Postfix* (Mail Tranfer Agent, MTA)
-* IMAP server *Dovecot* 
+* IMAP server *Dovecot*
 * fix for maildir (Only for Astra Linux)
 
     ```bash
