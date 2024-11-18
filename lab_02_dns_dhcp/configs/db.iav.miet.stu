@@ -1,0 +1,12 @@
+$TTL    604800
+iav.miet.stu.        IN       SOA     srv.iav.miet.stu. admin.iav.miet.stu. (
+                            2024100601   ; Serial number
+                            3h           ; Reresh rate
+                            1h           ; Retry of refresh 
+                            1w           ; Expire
+                            1h           ; Negative Cache TTL
+)           
+iav.miet.stu.        IN       NS      srv.iav.miet.stu.
+srv                  IN       A       192.168.122.13
+cli                  IN       A       192.168.122.12
+cli2                 IN       A       192.168.122.14

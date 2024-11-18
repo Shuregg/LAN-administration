@@ -1,0 +1,12 @@
+TTL 604800
+122.168.192.in-addr.arpa.       IN      SOA srv.iav.miet.stu. admin.iav.miet.stu. (
+        2024100601 ;
+        3h ;
+        1h ;
+        1w ;
+        1h ;
+)
+122.168.192.in-addr.arpa.       IN      NS  srv.iav.miet.stu.
+12                              IN      PTR cli.iav.miet.stu.
+13                              IN      PTR srv.iav.miet.stu.
+14                              IN      PTR cli2.iav.miet.stu.

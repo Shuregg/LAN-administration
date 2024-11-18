@@ -21,7 +21,7 @@ sudo apt install squid
     ```bash
     firefox ~/network.html
     ```
-    
+
     ![html via browser](images/img_01_html_via_browser.png)
 
 ## 2. Nginx web server
@@ -32,11 +32,11 @@ sudo apt install squid
     sudo systemctl status nginx.service
     firefox localhost
     ```
-    
+
     ![alt text](images/img_02_welcome_to_nginx.png)
 
     Creating configuration backup:
-    
+
     ```bash
     sudo cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.orig
     ```
@@ -50,13 +50,27 @@ sudo apt install squid
 
 2. Install the Nginx web server and configure it. When making an HTTP request, it should send the HTML file you created.
 
-
     ```bash
     sudo nano /etc/nginx/nginx.conf
     ```
 
     ```bash
     user www-data;
+    worker_processes auto;
+    pid /run/nginx.pid;
+    
+    events {
+        worker_connections 10;
+    }
+    
+    http {
+        sendfile on;
+        tcp_nopush on;
+        tcp_nodelay on;
+        keepalive_timeout 60;
+        access_log /var/www/site/access.log;
+        error_log /var/www/site/error.log;
+            user www-data;
     worker_processes auto;
     pid /run/nginx.pid;
     
@@ -79,24 +93,32 @@ sudo apt install squid
             server_name site.iav.miet.stu;
         }
     }
+        server {
+            listen 80 default_server;
+            root /var/www/site;
+            index site.html;
+            server_name site.iav.miet.stu;
+        }
+    }
     ```
 
     You should replace `www-data` by your username!
 
-
     Checking the config for errors:
-    
+
     ```bash
     sudo nginx -t
     ```
 
     You will see the following if there are no errors:
+
     ```bash
     nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
     nginx: configuration file /etc/nginx/nginx.conf test is successful
     ```
 
     Now restart nginx daemon:
+
     ```bash
     sudo systemctl restart nginx
     ```
@@ -104,12 +126,13 @@ sudo apt install squid
 3. Add the created page to the list of DNS records and open it from the client's machine using the site domain name `site.iav.miet.stu`.
 
     On the server:
+
     ```bash
     sudo nano /etc/bind/zones/db.iav.miet.stu
     ```
 
     Insert `site IN A 192.168.122.13` to the config:
-    
+
     ```bash
     $TTL    604800
     iav.miet.stu.        IN       SOA     srv.iav.miet.stu. admin.iav.miet.stu (
@@ -130,15 +153,16 @@ sudo apt install squid
     sudo systemctl restart bind9
     ```
 
-
     On the client:
 
     Trying to make a request:
+
     ```bash
     curl http://site.iav.miet.stu
     ```
-    
+
     You will see:
+
     ```html
     <!DOCTYPE html>
     <html>
@@ -155,7 +179,7 @@ sudo apt install squid
     ```
 
     Or open this URL via browser:
-    
+
     ```bash
     firefox site.iav.miet.stu
     ```
@@ -169,15 +193,15 @@ sudo apt install squid
     ```bash
     sudo ufw reset
     ```
-    
+
     ```bash
     Resetting all rules to installed defaults. Proceed with operation (y|n)? 
     ```
-    
+
     ```bash
     y
     ```
-    
+
     ```bash
     Backing up 'user.rules' to '/etc/ufw/user.rules.20241017_181741'
     Backing up 'before.rules' to '/etc/ufw/before.rules.20241017_181741'
@@ -186,7 +210,7 @@ sudo apt install squid
     Backing up 'before6.rules' to '/etc/ufw/before6.rules.20241017_181741'
     Backing up 'after6.rules' to '/etc/ufw/after6.rules.20241017_181741'
     ```
-    
+
     ```bash
     sudo ufw enable
     sudo ufw status verbose
@@ -197,7 +221,7 @@ sudo apt install squid
     On the server:
 
     Block port `22/tcp` (`ssh` and `sftp` use `TCP` protocol).
-    
+
     ```bash
     sudo ufw deny 22/tcp
     ```
@@ -205,31 +229,35 @@ sudo apt install squid
     On the client:
 
     Try to get a file from the server:
+
     ```bash
     wget ftp://ftp@192.168.122.13/iav.txt
     ```
 
     Infinite connection
+
     ```bash
     --2024-10-17 19:01:27--  ftp://ftp@192.168.122.13/iav.txt
                => «iav.txt»
     Connecting to 192.168.122.13:21...
     ```
+
 3. Add a rule allowing all incoming packets from the client.
-    
+
     Server:
 
     ```bash
     sudo ufw allow from 192.168.122.20
     ```
-    
+
     Client:
-    
+
     ```bash
     wget ftp://ftp@192.168.122.13/iav.txt
     ```
-    
+
     Now you can get a file from server via ftp
+
     ```bash
     --2024-10-17 19:04:44--  ftp://ftp@192.168.122.13/iav.txt
                => «iav.txt»
@@ -249,7 +277,7 @@ sudo apt install squid
 4. Check the connetction to the server via `sftp` and `ftp` protocols.
 
     Trying ftp:
-    
+
     ```bash
     ftp server
     ```
@@ -294,6 +322,7 @@ sudo apt install squid
     ```
 
 6. Turn of the firewall.
+
     ```bash
     sudo ufw disable 
     ```
@@ -301,6 +330,7 @@ sudo apt install squid
     ```bash
     Firewall stopped and disabled on system startup
     ```
+
 ## 4. Squid proxy server
 
 1. Install the squid on the server.
@@ -308,7 +338,7 @@ sudo apt install squid
 2. Configure the proxy server so that access to the `vk.com` is restricted during business hours, and the rest of the sites were launched freely.
 
     Make config backup:
-    
+
     ```bash
     sudo cp /etc/squid/squid.conf /etc/squid/squid.conf.orig
     ```
@@ -321,11 +351,13 @@ sudo apt install squid
     ```
 
     Overwrite the config
+
     ```bash
     sudo nano /etc/squid/squid.conf
     ```
 
     Insert the next parameters (modified default config):
+
     ```bash
     acl localnet src 0.0.0.1-0.255.255.255 # RFC 1122 "this" network (LAN)
     acl localnet src 10.0.0.0/8  # RFC 1918 local private network (LAN)
@@ -381,7 +413,7 @@ sudo apt install squid
     refresh_pattern -i (/cgi-bin/|\?) 0 0% 0
     refresh_pattern .  0 20% 4320
     ```
-    
+
     Check syntax:
 
     ```bash
@@ -395,9 +427,11 @@ sudo apt install squid
     ```
 
 3. Make sure that the client has access to the site you created.
-    
-    Prohibit the client from connecting to the site using a proxy server.  
+
+    Prohibit the client from connecting to the site using a proxy server.
+
     ```bash
     firefox vk.com
     ```
+
     ![Check vk.com and other site from the client using proxy](images/img_04_check_proxy_from_client.png)

@@ -1,0 +1,13 @@
+$TTL    604800
+iav.miet.stu.        IN       SOA     srv.iav.miet.stu. admin.iav.miet.stu (
+    2024100601
+    3h
+    1h
+    1w
+    1h
+)
+iav.miet.stu.        IN       NS      srv.iav.miet.stu.
+cli                  IN       A       192.168.122.12
+srv                  IN       A       192.168.122.13
+cli2                 IN       A       192.168.122.14
+site                 IN       A       192.168.122.13

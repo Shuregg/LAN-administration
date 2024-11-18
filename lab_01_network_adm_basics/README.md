@@ -62,16 +62,16 @@ netmask 255.255.255.0
 gateway 192.168.122.1
 ```
 
-Adding server's domen
+Adding server's domain
 
 ```bash
 sudo nano /etc/hosts
 ```
 
 ```bash
-# local domen
+# local domain
 127.0.1.1       iavclient
-# server domen
+# server domain
 192.168.122.13  iavserver
 ```
 
@@ -95,7 +95,7 @@ netmask 255.255.255.0
 gateway 192.168.122.1
 ```
 
-Adding client's domen
+Adding client's domain
 
 ```bash
 sudo nano /etc/hosts
@@ -103,7 +103,7 @@ sudo nano /etc/hosts
 
 ```bash
 127.0.1.1       iavserver
-# client domen
+# client domain
 192.168.122.12  iavclient
 ```
 
